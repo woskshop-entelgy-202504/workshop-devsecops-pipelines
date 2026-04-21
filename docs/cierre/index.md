@@ -32,16 +32,16 @@ A lo largo de este workshop, hemos construido un pipeline DevSecOps completo, ca
 
 | # | Concepto | Control de seguridad | Lab | Herramienta |
 |---|---|---|---|---|
-| 1 | CI/CD y Seguridad | Integración de seguridad en pipelines | Proyecto Azure DevOps | Azure DevOps |
-| 2 | Anatomía del Pipeline | Estructura de stages y gates | Pipeline Base | Azure Pipelines YAML |
+| 1 | CI/CD y Seguridad | Integración de seguridad en pipelines | Proyecto GitHub Actions | GitHub Actions |
+| 2 | Anatomía del Pipeline | Estructura de stages y gates | Pipeline Base | GitHub Actions YAML |
 | 3 | Secretos en Código | Prevención de filtraciones de credenciales | Detección de Secretos | Gitleaks |
 | 4 | Análisis Estático (SAST) | Detección de vulnerabilidades en código fuente | SAST con Semgrep | Semgrep |
 | 5 | Cadena de Suministro (SCA) | Control de dependencias vulnerables + SBOM | SCA y SBOM | Trivy |
-| 6 | Artefactos e Inmutabilidad | Integridad y trazabilidad de artefactos | Build e Imagen | Docker + ACR |
+| 6 | Artefactos e Inmutabilidad | Integridad y trazabilidad de artefactos | Build e Imagen | Docker + GHCR |
 | 7 | Registros y Confianza | Firma y verificación de imágenes | Escaneo y Firma | Cosign + Trivy |
 | 8 | Pruebas Dinámicas (DAST) | Testing de seguridad en aplicación desplegada | DAST con OWASP ZAP | ZAP |
 | 9 | IaC y Seguridad | Escaneo de infraestructura como código | Escaneo de IaC | Checkov + OPA |
-| 10 | Despliegues Seguros | Approval gates, rollback, separación de deberes | Deploy con Aprobaciones | Azure Environments |
+| 10 | Despliegues Seguros | Approval gates, rollback, separación de deberes | Deploy con Aprobaciones | GitHub Environments |
 | 11 | Monitorización | Detección en runtime, feedback loop | Monitorización Post-Deploy | Azure Monitor |
 
 ---
@@ -113,7 +113,7 @@ flowchart TD
 ### Resumen YAML del pipeline completo
 
 ```yaml
-# azure-pipelines.yml — Pipeline DevSecOps completo
+# .github/workflows/devsecops.yml — Pipeline DevSecOps completo
 trigger:
   branches:
     include: [main]
@@ -123,73 +123,73 @@ pool:
 
 stages:
   # ─── Stage 1: Detección de Secretos ──────
-  - stage: SecretsDetection
-    displayName: '🔑 Secrets Detection'
+  # job: SecretsDetection
+    name: '🔑 Secrets Detection'
     jobs:
       - job: Gitleaks
         steps:
-          - script: gitleaks detect --source . --report-format sarif --report-path gitleaks.sarif
+          - run: gitleaks detect --source . --report-format sarif --report-path gitleaks.sarif
 
   # ─── Stage 2: SAST ──────────────────────
-  - stage: SAST
-    displayName: '🔍 SAST'
+  # job: SAST
+    name: '🔍 SAST'
     dependsOn: SecretsDetection
     jobs:
       - job: Semgrep
         steps:
-          - script: semgrep scan --config auto --sarif --output semgrep.sarif
+          - run: semgrep scan --config auto --sarif --output semgrep.sarif
 
   # ─── Stage 3: SCA + SBOM ────────────────
-  - stage: SCA
-    displayName: '📦 SCA + SBOM'
+  # job: SCA
+    name: '📦 SCA + SBOM'
     dependsOn: SecretsDetection
     jobs:
       - job: TrivyFS
         steps:
-          - script: trivy fs --scanners vuln --format sarif --output trivy-sca.sarif .
-          - script: trivy fs --format spdx-json --output sbom.spdx.json .
+          - run: trivy fs --scanners vuln --format sarif --output trivy-sca.sarif .
+          - run: trivy fs --format spdx-json --output sbom.spdx.json .
 
   # ─── Stage 4: Build ─────────────────────
-  - stage: Build
-    displayName: '🏗️ Build'
+  # job: Build
+    name: '🏗️ Build'
     dependsOn: [SAST, SCA]
     jobs:
       - job: DockerBuild
         steps:
-          - script: docker build -t $(ACR)/$(IMAGE):$(TAG) .
+          - run: docker build -t $(ACR)/$(IMAGE):$(TAG) .
 
   # ─── Stage 5: Image Scan ────────────────
-  - stage: ImageScan
-    displayName: '🔬 Image Scan'
+  # job: ImageScan
+    name: '🔬 Image Scan'
     dependsOn: Build
     jobs:
       - job: TrivyImage
         steps:
-          - script: trivy image --severity HIGH,CRITICAL --exit-code 1 $(ACR)/$(IMAGE):$(TAG)
+          - run: trivy image --severity HIGH,CRITICAL --exit-code 1 $(ACR)/$(IMAGE):$(TAG)
 
   # ─── Stage 6: Sign + Push ───────────────
-  - stage: SignAndPush
-    displayName: '✍️ Sign + Push'
+  # job: SignAndPush
+    name: '✍️ Sign + Push'
     dependsOn: ImageScan
     jobs:
       - job: CosignSign
         steps:
-          - script: docker push $(ACR)/$(IMAGE):$(TAG)
-          - script: cosign sign --yes $(ACR)/$(IMAGE):$(TAG)
+          - run: docker push $(ACR)/$(IMAGE):$(TAG)
+          - run: cosign sign --yes $(ACR)/$(IMAGE):$(TAG)
 
   # ─── Stage 7: IaC Scan ──────────────────
-  - stage: IaCScan
-    displayName: '🏗️ IaC Scan'
+  # job: IaCScan
+    name: '🏗️ IaC Scan'
     dependsOn: SignAndPush
     jobs:
       - job: Checkov
         steps:
-          - script: checkov -d ./infrastructure/ --hard-fail-on HIGH,CRITICAL
-          - script: conftest test --policy policy/ tfplan.json
+          - run: checkov -d ./infrastructure/ --hard-fail-on HIGH,CRITICAL
+          - run: conftest test --policy policy/ tfplan.json
 
   # ─── Stage 8: Deploy Staging ─────────────
-  - stage: DeployStaging
-    displayName: '🚀 Deploy Staging'
+  # job: DeployStaging
+    name: '🚀 Deploy Staging'
     dependsOn: IaCScan
     jobs:
       - deployment: Staging
@@ -198,22 +198,22 @@ stages:
           runOnce:
             deploy:
               steps:
-                - script: echo "Deploy to staging"
+                - run: echo "Deploy to staging"
 
   # ─── Stage 9: DAST ──────────────────────
-  - stage: DAST
-    displayName: '🌐 DAST'
+  # job: DAST
+    name: '🌐 DAST'
     dependsOn: DeployStaging
     jobs:
       - job: ZAPScan
         steps:
-          - script: |
+          - run: |
               docker run --rm ghcr.io/zaproxy/zaproxy:stable \
                 zap-baseline.py -t https://staging.myapp.com -J zap-report.json
 
   # ─── Stage 10: Deploy Production ─────────
-  - stage: DeployProduction
-    displayName: '🎯 Deploy Production'
+  # job: DeployProduction
+    name: '🎯 Deploy Production'
     dependsOn: DAST
     jobs:
       - deployment: Production
@@ -223,7 +223,7 @@ stages:
             increments: [10, 50]
             deploy:
               steps:
-                - script: echo "Canary deployment to production"
+                - run: echo "Canary deployment to production"
 ```
 
 ---
@@ -294,7 +294,7 @@ graph LR
 
 - Agregar **escaneo de imágenes** de contenedores
 - Implementar **firma de imágenes** con Cosign keyless
-- Configurar **Azure DevOps Environments** con approval gates para producción
+- Configurar **GitHub Actions Environments** con approval gates para producción
 - Establecer **umbrales de bloqueo**: qué severidades bloquean el pipeline
 
 ### Fase 3: Políticas (Semanas 9-12)
@@ -353,7 +353,7 @@ Para los miembros del equipo que quieran profundizar en DevSecOps:
 | **CASE** (Certified Application Security Engineer) | EC-Council | Seguridad de aplicaciones | Intermedio |
 | **CCSK** (Certificate of Cloud Security Knowledge) | CSA | Seguridad cloud | Fundamentos |
 | **AZ-500** (Azure Security Engineer Associate) | Microsoft | Seguridad en Azure | Intermedio |
-| **AZ-400** (Azure DevOps Engineer Expert) | Microsoft | DevOps en Azure | Avanzado |
+| **AZ-400** (GitHub Actions Engineer Expert) | Microsoft | DevOps en Azure | Avanzado |
 | **OSCP** (Offensive Security Certified Professional) | OffSec | Pentesting hands-on | Avanzado |
 | **CKS** (Certified Kubernetes Security Specialist) | CNCF | Seguridad de Kubernetes | Avanzado |
 
@@ -367,7 +367,7 @@ Para los miembros del equipo que quieran profundizar en DevSecOps:
 - [NIST SP 800-218 — Secure Software Development Framework](https://csrc.nist.gov/publications/detail/sp/800-218/final)
 - [SLSA Framework — Supply-chain Levels for Software Artifacts](https://slsa.dev/)
 - [Sigstore Documentation](https://docs.sigstore.dev/)
-- [Azure DevOps Security Best Practices](https://learn.microsoft.com/en-us/azure/devops/organizations/security/)
+- [GitHub Actions Security Best Practices](https://learn.microsoft.com/en-us/azure/devops/organizations/security/)
 
 ### Herramientas cubiertas en el workshop
 

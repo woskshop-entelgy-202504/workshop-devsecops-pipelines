@@ -54,7 +54,7 @@ en desarrolladores.
   </div>
   <div class="lab-meta-item">
     <strong>Plataforma</strong>
-    Azure DevOps
+    GitHub Actions
   </div>
   <div class="lab-meta-item">
     <strong>Formato</strong>
@@ -66,7 +66,7 @@ en desarrolladores.
 
 ## Estructura: Concepto + Lab
 
-Este workshop alterna **modulos de concepto** (teoria con diagramas, incidentes reales y tablas) con **labs practicos** donde aplicas cada control en un pipeline real de Azure DevOps.
+Este workshop alterna **modulos de concepto** (teoria con diagramas, incidentes reales y tablas) con **labs practicos** donde aplicas cada control en un pipeline real de GitHub Actions.
 
 ```mermaid
 flowchart LR
@@ -131,15 +131,15 @@ flowchart LR
 
 - :material-sitemap-outline: **Concepto 2 — Anatomia del Pipeline**
 
-    Jerarquia de Azure DevOps: Pipeline > Stages > Jobs > Steps. Agentes,
-    YAML, variables, secretos y service connections como vectores de ataque.
+    Jerarquia de GitHub Actions: Pipeline > Stages > Jobs > Steps. Agentes,
+    YAML, variables, secretos y GitHub Secrets (o GitHub Secrets) como vectores de ataque.
 
     [:octicons-arrow-right-24: Ir al concepto](concepto02-anatomia-pipeline/index.md)
 
 - :material-key-alert: **Concepto 3 — Secretos en Codigo**
 
     Permanencia en Git, ciclo de vida de una fuga, gestion de secretos con
-    Azure Key Vault e identidades gestionadas. Casos: Uber 2016, CircleCI.
+    GitHub Secrets e identidades gestionadas. Casos: Uber 2016, CircleCI.
 
     [:octicons-arrow-right-24: Ir al concepto](concepto03-secretos/index.md)
 
@@ -203,61 +203,30 @@ flowchart LR
 
 ---
 
-## Labs practicos
+## Resultados del Pipeline
+
+Despues de hacer fork y push, el pipeline ejecuta 10 stages automaticamente. Verifica tus resultados:
 
 <div class="grid cards" markdown>
 
-- :octicons-terminal-24: **Lab 1** — Proyecto Azure DevOps
-
-    [:octicons-arrow-right-24: Ir al lab](lab01-setup/index.md)
-
-- :octicons-terminal-24: **Lab 2** — Pipeline Base
-
-    [:octicons-arrow-right-24: Ir al lab](lab02-pipeline-base/index.md)
-
-- :octicons-terminal-24: **Lab 3** — Deteccion de Secretos
-
-    [:octicons-arrow-right-24: Ir al lab](lab03-secretos/index.md)
-
-- :octicons-terminal-24: **Lab 4** — SAST con Semgrep
-
-    [:octicons-arrow-right-24: Ir al lab](lab04-sast/index.md)
-
-- :octicons-terminal-24: **Lab 5** — SCA y SBOM
-
-    [:octicons-arrow-right-24: Ir al lab](lab05-sca/index.md)
-
-- :octicons-terminal-24: **Lab 6** — Build e Imagen
-
-    [:octicons-arrow-right-24: Ir al lab](lab06-build/index.md)
-
-- :octicons-terminal-24: **Lab 7** — Firma de Imagen
-
-    [:octicons-arrow-right-24: Ir al lab](lab07-image-signing/index.md)
-
-- :octicons-terminal-24: **Lab 8** — DAST con OWASP ZAP
-
-    [:octicons-arrow-right-24: Ir al lab](lab08-dast/index.md)
-
-- :octicons-terminal-24: **Lab 9** — Escaneo de IaC
-
-    [:octicons-arrow-right-24: Ir al lab](lab09-iac/index.md)
-
-- :octicons-terminal-24: **Lab 10** — Deploy con Aprobaciones
-
-    [:octicons-arrow-right-24: Ir al lab](lab10-deploy/index.md)
-
-- :octicons-terminal-24: **Lab 11** — Monitorizacion
-
-    [:octicons-arrow-right-24: Ir al lab](lab11-monitorizacion/index.md)
+- :material-key-alert: **[1. Secretos](resultados/01-secretos.md)** — Credenciales detectadas por Gitleaks
+- :material-shield-search: **[2. SAST](resultados/02-sast.md)** — 14 hallazgos de Semgrep
+- :material-package-variant-closed: **[3. SCA](resultados/03-sca.md)** — CVEs + SBOM
+- :material-docker: **[4. Build](resultados/04-build.md)** — Imagen en GHCR
+- :material-certificate: **[5. Firma](resultados/05-image-scan.md)** — Cosign keyless
+- :material-terraform: **[6. IaC](resultados/06-iac.md)** — 10 misconfigs Checkov
+- :material-rocket-launch: **[7. Staging](resultados/07-staging.md)** — Deploy OK
+- :material-web-check: **[8. DAST](resultados/08-dast.md)** — ZAP XSS, SQLi
+- :material-shield-check: **[9. Produccion](resultados/09-produccion.md)** — Firma verificada
+- :material-chart-timeline-variant-shimmer: **[10. Monitor](resultados/10-monitor.md)** — Health + Smoke
 
 </div>
 
 ---
 
-## Arquitectura del Pipeline Final
+## Arquitectura del Pipeline
 
-El pipeline DevSecOps completo que construiras abarca once capas de seguridad:
+El pipeline DevSecOps completo abarca diez capas de seguridad:
 
 ```mermaid
 flowchart TB
@@ -299,22 +268,15 @@ flowchart TB
 
 ---
 
-## Prerequisitos
+## Comienza Aqui
 
-Antes de comenzar, asegurate de tener:
+<div class="grid cards" markdown>
 
-- [x] Una cuenta de **Azure DevOps** (gratuita)
-- [ ] Una cuenta de **GitHub** con un repositorio personal
-- [ ] **Docker Desktop** instalado y funcionando
-- [ ] **Terraform** >= 1.6 instalado
-- [ ] **Azure CLI** (`az`) instalado y autenticado
-- [ ] **Python** >= 3.10 y `pip` disponibles
-- [ ] **Git** >= 2.40 instalado
-- [ ] Familiaridad basica con YAML y la linea de comandos
+- :octicons-rocket-24: **[Configurar el Entorno](setup/index.md)**
 
-!!! tip "Guia de instalacion completa"
-    Sigue la [Guia de Prerequisitos](modulo0/prerequisites.md) para instrucciones
-    paso a paso en macOS, Linux y WSL2 antes de comenzar los labs.
+    Fork el repo, valida dependencias, push a main y verifica que el pipeline queda verde. **15 minutos.**
+
+</div>
 
 ---
 

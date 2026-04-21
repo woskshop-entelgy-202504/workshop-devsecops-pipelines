@@ -1,6 +1,6 @@
 ---
 title: "Limpieza de Recursos"
-description: Guía para eliminar todos los recursos creados durante el workshop — Azure DevOps, ACR, Azure, Docker e imágenes locales
+description: Guía para eliminar todos los recursos creados durante el workshop — GitHub Actions, ACR, Azure, Docker e imágenes locales
 tags:
   - limpieza
   - cleanup
@@ -98,12 +98,12 @@ az acr run --cmd "acr purge --filter 'devsecops-app:.*' --ago 0d --untagged" \
 
 ---
 
-## 3. Azure DevOps
+## 3. GitHub Actions
 
-### Eliminar el proyecto de Azure DevOps
+### Eliminar el proyecto de GitHub Actions
 
 !!! info "Opcional"
-    Si quieres conservar el proyecto como referencia, puedes dejarlo. Los proyectos de Azure DevOps no generan costes de Azure (salvo si tienes agentes self-hosted).
+    Si quieres conservar el proyecto como referencia, puedes dejarlo. Los proyectos de GitHub Actions no generan costes de Azure (salvo si tienes agentes self-hosted).
 
 ```bash
 # Listar proyectos en la organización
@@ -116,18 +116,18 @@ az devops project delete \
   --yes
 ```
 
-### Eliminar service connections
+### Eliminar GitHub Secrets (o GitHub Secrets)
 
-Si no eliminas el proyecto, al menos elimina las service connections que tienen credenciales:
+Si no eliminas el proyecto, al menos elimina las GitHub Secrets (o GitHub Secrets) que tienen credenciales:
 
 1. Ve a **Project Settings** > **Service connections**
-2. Elimina la conexión a Azure (ARM service connection)
+2. Elimina credenciales externas de GitHub Secrets
 3. Elimina cualquier conexión a Docker Registry
 
-### Eliminar variable groups con secretos
+### Revisar GitHub Environments
 
 1. Ve a **Pipelines** > **Library**
-2. Elimina los variable groups que contengan secretos del workshop
+2. Elimina los GitHub Environments que contengan secretos del workshop
 
 ---
 
@@ -145,7 +145,7 @@ docker rmi $(docker images --filter "reference=*workshop*" -q) 2>/dev/null
 
 # Eliminar imágenes de herramientas usadas en los labs
 docker rmi ghcr.io/zaproxy/zaproxy:stable 2>/dev/null
-docker rmi returntocorp/semgrep:latest 2>/dev/null
+docker rmi semgrep/semgrep:latest 2>/dev/null
 docker rmi aquasec/trivy:latest 2>/dev/null
 docker rmi gcr.io/projectsigstore/cosign:latest 2>/dev/null
 
@@ -241,7 +241,7 @@ pre-commit clean
 | Credencial | Dónde revocar |
 |---|---|
 | Azure Service Principal secret | Azure Portal > Entra ID > App registrations > Certificates & secrets |
-| Azure DevOps PAT | Azure DevOps > User Settings > Personal Access Tokens |
+| GitHub Actions PAT | GitHub Actions > User Settings > Personal Access Tokens |
 | Cosign key pair | Eliminar archivos `cosign.key` y `cosign.pub` locales |
 | Docker Hub token | Docker Hub > Account Settings > Security |
 | GitHub PAT (si se creó) | GitHub > Settings > Developer Settings > Personal Access Tokens |
@@ -297,7 +297,7 @@ echo "=== Verificación completada ==="
 |---|---|
 | Resource Groups de Azure | Eliminados |
 | Azure Container Registry | Eliminado |
-| Azure DevOps Project | Eliminado o conservado sin service connections |
+| GitHub Actions Project | Eliminado o conservado sin GitHub Secrets (o GitHub Secrets) |
 | Imágenes Docker locales | Eliminadas |
 | Entorno virtual Python | Eliminado |
 | Pre-commit hooks | Eliminados |
